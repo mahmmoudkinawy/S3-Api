@@ -1,0 +1,51 @@
+name: CI/CD Docker Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚀 Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🛠 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: 🔑 Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 📦 Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/minio-api:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔑 SSH into VPS and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            docker pull ${{ secrets.DOCKER_USERNAME }}/minio-api:latest
+            docker stop minio-api || true
+            docker rm minio-api || true
+            docker run -d -p 5000:5000 --name minio-api \
+              -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
+              -e MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }} \
+              -e MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }} \
+              ${{ secrets.DOCKER_USERNAME }}/minio-api:latest
