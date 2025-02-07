@@ -25,7 +25,7 @@ jobs:
       - name: 📦 Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
-          context: ./S3DemoWebApi
+          context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/s3-api:latest
 
