@@ -8,8 +8,8 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["S3DemoWebApi/S3DemoWebApi.csproj", "S3DemoWebApi/"]
-RUN dotnet restore "./S3DemoWebApi/S3DemoWebApi.csproj"
+COPY ["./S3DemoWebApi.csproj", "S3DemoWebApi/"]
+RUN dotnet restore "./S3DemoWebApi.csproj"
 COPY . .
 WORKDIR "/src/S3DemoWebApi"
 RUN dotnet build "./S3DemoWebApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
